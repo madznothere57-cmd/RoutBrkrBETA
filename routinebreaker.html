@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RoutineBreaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inconsolata:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0E0E0C;
+  --surface: #161614;
+  --surface2: #1E1E1B;
+  --border: #2A2A26;
+  --accent: #D4F060;
+  --accent2: #F0A860;
+  --accent3: #60D4F0;
+  --text: #F0EFE6;
+  --text2: #8A8A7A;
+  --text3: #4A4A3A;
+  --radius: 16px;
+  --radius-sm: 10px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+
+body {
+  font-family:'Inconsolata',monospace;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+}
+
+.app {
+  width:100%;
+  max-width:430px;
+  min-height:100vh;
+  position:relative;
+  padding-bottom:90px;
+  overflow-x:hidden;
+}
+
+/* SCREENS */
+.screen{display:none}
+.screen.active{display:block}
+
+/* TOPBAR */
+.topbar {
+  padding:2.5rem 1.25rem 1rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  position:sticky;
+  top:0;
+  background:var(--bg);
+  z-index:10;
+  border-bottom:0.5px solid var(--border);
+  margin-bottom:1.5rem;
+}
+
+.appname {
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:20px;
+  color:var(--text);
+  letter-spacing:-1px;
+}
+
+.appname span { color:var(--accent); }
+
+.topbar-sub {
+  font-size:11px;
+  color:var(--text2);
+  letter-spacing:1px;
+  text-transform:uppercase;
+}
+
+/* SECTION LABELS */
+.label {
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--text3);
+  padding:0 1.25rem;
+  margin-bottom:10px;
+  margin-top:1.5rem;
+}
+
+/* CARDS */
+.card {
+  margin:0 1rem 1rem;
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius);
+  padding:1.25rem;
+}
+
+/* TODAY CARD */
+.today-card {
+  margin:0 1rem 1rem;
+  background:var(--accent);
+  border-radius:var(--radius);
+  padding:1.5rem;
+  position:relative;
+  overflow:hidden;
+}
+
+.today-card::before {
+  content:'';
+  position:absolute;
+  top:-30px;right:-30px;
+  width:120px;height:120px;
+  background:rgba(0,0,0,0.08);
+  border-radius:50%;
+}
+
+.today-label {
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:rgba(0,0,0,0.5);
+  margin-bottom:6px;
+}
+
+.today-date {
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:22px;
+  color:#0E0E0C;
+  letter-spacing:-0.5px;
+  margin-bottom:4px;
+}
+
+.today-streak {
+  font-size:12px;
+  color:rgba(0,0,0,0.6);
+}
+
+.today-streak strong { color:#0E0E0C; }
+
+/* LOG INPUT */
+.log-input-area {
+  margin:0 1rem 0;
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius);
+  padding:1rem 1.25rem;
+}
+
+.log-input-area textarea {
+  width:100%;
+  background:transparent;
+  border:none;
+  outline:none;
+  color:var(--text);
+  font-family:'Inconsolata',monospace;
+  font-size:14px;
+  resize:none;
+  line-height:1.6;
+  min-height:80px;
+}
+
+.log-input-area textarea::placeholder { color:var(--text3); }
+
+.log-input-footer {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:0.5px solid var(--border);
+}
+
+.mood-row { display:flex; gap:6px; }
+
+.mood-btn {
+  font-size:18px;
+  background:none;
+  border:none;
+  cursor:pointer;
+  padding:4px;
+  border-radius:6px;
+  transition:transform 0.15s;
+  opacity:0.4;
+}
+
+.mood-btn:active { transform:scale(1.3); }
+.mood-btn.selected { opacity:1; }
+
+.log-submit {
+  background:var(--accent);
+  color:#0E0E0C;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:8px 16px;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:12px;
+  cursor:pointer;
+  letter-spacing:0.5px;
+  transition:opacity 0.15s;
+}
+
+.log-submit:active { opacity:0.8; }
+
+/* BREAK SUGGESTION */
+.break-card {
+  margin:0 1rem 1rem;
+  background:var(--surface2);
+  border:0.5px solid var(--accent);
+  border-radius:var(--radius);
+  padding:1.25rem;
+  position:relative;
+  overflow:hidden;
+  animation:fadeUp 0.4s ease;
+}
+
+@keyframes fadeUp {
+  from{opacity:0;transform:translateY(10px)}
+  to{opacity:1;transform:translateY(0)}
+}
+
+.break-card::before {
+  content:'BREAK';
+  position:absolute;
+  top:12px;right:14px;
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:9px;
+  letter-spacing:2px;
+  color:var(--accent);
+  opacity:0.4;
+}
+
+.break-category {
+  font-size:10px;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  color:var(--accent);
+  margin-bottom:8px;
+  opacity:0.7;
+}
+
+.break-title {
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:17px;
+  color:var(--text);
+  margin-bottom:6px;
+  line-height:1.3;
+  letter-spacing:-0.3px;
+}
+
+.break-desc {
+  font-size:13px;
+  color:var(--text2);
+  line-height:1.6;
+  margin-bottom:12px;
+}
+
+.break-meta {
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.break-tag {
+  font-size:10px;
+  letter-spacing:1px;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:20px;
+  border:0.5px solid var(--border);
+  color:var(--text2);
+}
+
+.break-tag.free { border-color:var(--accent); color:var(--accent); }
+.break-tag.outdoor { border-color:var(--accent3); color:var(--accent3); }
+.break-tag.creative { border-color:var(--accent2); color:var(--accent2); }
+
+.break-actions {
+  display:flex;
+  gap:8px;
+  margin-top:14px;
+}
+
+.break-done {
+  flex:1;
+  background:var(--accent);
+  color:#0E0E0C;
+  border:none;
+  border-radius:var(--radius-sm);
+  padding:10px;
+  font-family:'Syne',sans-serif;
+  font-weight:700;
+  font-size:12px;
+  cursor:pointer;
+  letter-spacing:0.5px;
+}
+
+.break-skip {
+  background:transparent;
+  color:var(--text2);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:10px 16px;
+  font-family:'Inconsolata',monospace;
+  font-size:12px;
+  cursor:pointer;
+}
+
+/* ENTRIES */
+.entry {
+  margin:0 1rem 0.75rem;
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius);
+  padding:1rem 1.25rem;
+  animation:fadeUp 0.3s ease;
+}
+
+.entry-header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:8px;
+}
+
+.entry-date {
+  font-size:11px;
+  color:var(--text3);
+  letter-spacing:1px;
+}
+
+.entry-mood { font-size:16px; }
+
+.entry-text {
+  font-size:13px;
+  color:var(--text2);
+  line-height:1.6;
+}
+
+.entry-break {
+  margin-top:8px;
+  padding-top:8px;
+  border-top:0.5px solid var(--border);
+  font-size:11px;
+  color:var(--accent);
+  letter-spacing:0.5px;
+}
+
+/* ROUTINE PATTERN */
+.pattern-grid {
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
+  padding:0 1.25rem;
+  margin-bottom:1rem;
+}
+
+.pattern-cell {
+  aspect-ratio:1;
+  border-radius:4px;
+  background:var(--surface2);
+  border:0.5px solid var(--border);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:8px;
+  color:var(--text3);
+  letter-spacing:0.5px;
+  flex-direction:column;
+  gap:2px;
+  cursor:default;
+}
+
+.pattern-cell.has-entry { background:var(--surface); border-color:var(--text3); }
+.pattern-cell.has-break { border-color:var(--accent); }
+.pattern-cell.today { border-color:var(--accent); background:rgba(212,240,96,0.08); }
+.pattern-cell .cell-dot { width:5px; height:5px; border-radius:50%; background:var(--accent); }
+
+/* SETUP */
+.setup-field { margin-bottom:1.25rem; }
+
+.setup-label {
+  display:block;
+  font-size:11px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--text2);
+  margin-bottom:8px;
+}
+
+.setup-field input, .setup-field select {
+  width:100%;
+  background:var(--surface2);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:12px 14px;
+  color:var(--text);
+  font-family:'Inconsolata',monospace;
+  font-size:14px;
+  outline:none;
+  appearance:none;
+}
+
+.setup-field input:focus, .setup-field select:focus {
+  border-color:var(--accent);
+}
+
+.chip-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+
+.chip {
+  font-size:11px;
+  letter-spacing:1px;
+  padding:6px 14px;
+  border-radius:20px;
+  border:0.5px solid var(--border);
+  color:var(--text2);
+  cursor:pointer;
+  background:var(--surface2);
+  transition:all 0.15s;
+  user-select:none;
+  font-family:'Inconsolata',monospace;
+}
+
+.chip:active { transform:scale(0.95); }
+.chip.active { background:rgba(212,240,96,0.12); border-color:var(--accent); color:var(--accent); }
+
+/* PRIMARY BTN */
+.primary-btn {
+  display:block;
+  width:calc(100% - 2.5rem);
+  margin:1.25rem 1.25rem 0;
+  background:var(--accent);
+  color:#0E0E0C;
+  border:none;
+  border-radius:var(--radius);
+  padding:15px;
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:14px;
+  cursor:pointer;
+  letter-spacing:0.5px;
+  transition:opacity 0.15s, transform 0.1s;
+}
+
+.primary-btn:active { transform:scale(0.98); opacity:0.9; }
+.primary-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+/* STATS */
+.stats-grid {
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:8px;
+  padding:0 1rem;
+  margin-bottom:1rem;
+}
+
+.stat-cell {
+  background:var(--surface);
+  border:0.5px solid var(--border);
+  border-radius:var(--radius);
+  padding:1rem 1.25rem;
+}
+
+.stat-label {
+  font-size:10px;
+  letter-spacing:1.5px;
+  text-transform:uppercase;
+  color:var(--text3);
+  margin-bottom:4px;
+}
+
+.stat-val {
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:26px;
+  color:var(--accent);
+}
+
+.stat-sub { font-size:11px; color:var(--text2); margin-top:2px; }
+
+/* EMPTY STATE */
+.empty {
+  padding:2rem 1.25rem;
+  text-align:center;
+  color:var(--text3);
+  font-size:12px;
+  letter-spacing:0.5px;
+  line-height:1.8;
+}
+
+/* BOTTOM NAV */
+.bottom-nav {
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:430px;
+  background:rgba(14,14,12,0.95);
+  backdrop-filter:blur(12px);
+  border-top:0.5px solid var(--border);
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0 max(14px,env(safe-area-inset-bottom));
+  z-index:100;
+}
+
+.nav-item {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:3px;
+  cursor:pointer;
+  background:none;
+  border:none;
+  padding:4px 20px;
+}
+
+.nav-icon {
+  font-size:18px;
+  color:var(--text3);
+  transition:color 0.15s;
+}
+
+.nav-item.active .nav-icon { color:var(--accent); }
+
+.nav-label {
+  font-size:9px;
+  color:var(--text3);
+  letter-spacing:1px;
+  text-transform:uppercase;
+  font-family:'Inconsolata',monospace;
+}
+
+.nav-item.active .nav-label { color:var(--accent); }
+
+/* ONBOARDING */
+.onboard-hero {
+  padding:3rem 1.25rem 2rem;
+  text-align:center;
+}
+
+.onboard-icon {
+  font-size:48px;
+  margin-bottom:1rem;
+  display:block;
+}
+
+.onboard-title {
+  font-family:'Syne',sans-serif;
+  font-weight:800;
+  font-size:28px;
+  color:var(--text);
+  letter-spacing:-1px;
+  margin-bottom:8px;
+  line-height:1.1;
+}
+
+.onboard-title span { color:var(--accent); }
+
+.onboard-sub {
+  font-size:13px;
+  color:var(--text2);
+  line-height:1.7;
+  max-width:280px;
+  margin:0 auto;
+}
+
+.divider {
+  height:0.5px;
+  background:var(--border);
+  margin:1.5rem 1.25rem;
+}
+</style>
+</head>
+<body>
+<div class="app" id="app">
+
+  <!-- ONBOARDING -->
+  <div class="screen active" id="screen-onboard">
+    <div class="onboard-hero">
+      <span class="onboard-icon">⚡</span>
+      <div class="onboard-title">Routine<span>Breaker</span></div>
+      <div class="onboard-sub">Log your days. Spot the patterns. Break them — just a little.</div>
+    </div>
+    <div class="card">
+      <div class="setup-field">
+        <label class="setup-label">your name</label>
+        <input type="text" id="setupName" placeholder="what do we call you?">
+      </div>
+      <div class="setup-field">
+        <label class="setup-label">your age</label>
+        <div class="chip-row" id="ageChips">
+          <span class="chip" onclick="toggleChip(this,'age')">13–14</span>
+          <span class="chip" onclick="toggleChip(this,'age')">15–16</span>
+          <span class="chip" onclick="toggleChip(this,'age')">17–18</span>
+          <span class="chip" onclick="toggleChip(this,'age')">18+</span>
+        </div>
+      </div>
+      <div class="setup-field">
+        <label class="setup-label">usual budget for fun stuff</label>
+        <div class="chip-row" id="budgetChips">
+          <span class="chip" onclick="toggleChip(this,'budget')">$0 (free only)</span>
+          <span class="chip" onclick="toggleChip(this,'budget')">$1–5</span>
+          <span class="chip" onclick="toggleChip(this,'budget')">$5–15</span>
+          <span class="chip" onclick="toggleChip(this,'budget')">$15+</span>
+        </div>
+      </div>
+      <div class="setup-field">
+        <label class="setup-label">your vibe</label>
+        <div class="chip-row" id="vibeChips">
+          <span class="chip" onclick="toggleChip(this,'vibe')">outdoorsy</span>
+          <span class="chip" onclick="toggleChip(this,'vibe')">homebody</span>
+          <span class="chip" onclick="toggleChip(this,'vibe')">creative</span>
+          <span class="chip" onclick="toggleChip(this,'vibe')">gamer</span>
+          <span class="chip" onclick="toggleChip(this,'vibe')">social</span>
+          <span class="chip" onclick="toggleChip(this,'vibe')">antisocial</span>
+        </div>
+      </div>
+    </div>
+    <button class="primary-btn" onclick="completeSetup()">Let's break some routines →</button>
+    <div style="height:2rem"></div>
+  </div>
+
+  <!-- HOME SCREEN -->
+  <div class="screen" id="screen-home">
+    <div class="topbar">
+      <div>
+        <div class="appname">Routine<span>Breaker</span></div>
+      </div>
+      <div class="topbar-sub" id="homeGreeting">hey!</div>
+    </div>
+
+    <div class="today-card">
+      <div class="today-label">today</div>
+      <div class="today-date" id="todayDate">—</div>
+      <div class="today-streak" id="todayStreak">start logging to build your streak</div>
+    </div>
+
+    <div class="label">what happened today</div>
+    <div class="log-input-area">
+      <textarea id="logText" placeholder="just a sentence or two. what actually happened today?"></textarea>
+      <div class="log-input-footer">
+        <div class="mood-row">
+          <button class="mood-btn" onclick="selectMood(this,'😐')">😐</button>
+          <button class="mood-btn" onclick="selectMood(this,'🙂')">🙂</button>
+          <button class="mood-btn" onclick="selectMood(this,'😴')">😴</button>
+          <button class="mood-btn" onclick="selectMood(this,'😤')">😤</button>
+          <button class="mood-btn" onclick="selectMood(this,'✨')">✨</button>
+        </div>
+        <button class="log-submit" onclick="submitLog()">log it</button>
+      </div>
+    </div>
+
+    <div id="breakArea"></div>
+    <div id="recentEntries"></div>
+    <div style="height:1rem"></div>
+  </div>
+
+  <!-- HISTORY SCREEN -->
+  <div class="screen" id="screen-history">
+    <div class="topbar">
+      <div class="appname">Routine<span>Breaker</span></div>
+      <div class="topbar-sub">your log</div>
+    </div>
+
+    <div class="label">28-day pattern</div>
+    <div class="pattern-grid" id="patternGrid"></div>
+
+    <div class="label">all entries</div>
+    <div id="allEntries"></div>
+    <div style="height:1rem"></div>
+  </div>
+
+  <!-- STATS SCREEN -->
+  <div class="screen" id="screen-stats">
+    <div class="topbar">
+      <div class="appname">Routine<span>Breaker</span></div>
+      <div class="topbar-sub">patterns</div>
+    </div>
+
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <div class="label">your most common days</div>
+    <div class="card" id="patternInsight">
+      <div class="empty">log more days to see patterns emerge</div>
+    </div>
+
+    <div class="label">breaks completed</div>
+    <div class="card" id="breaksCompleted">
+      <div class="empty">no breaks done yet — check the home screen for suggestions</div>
+    </div>
+
+    <div style="height:1rem"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" id="nav-home" onclick="showScreen('screen-home')">
+      <span class="nav-icon">◈</span>
+      <span class="nav-label">today</span>
+    </button>
+    <button class="nav-item" id="nav-history" onclick="showScreen('screen-history')">
+      <span class="nav-icon">▦</span>
+      <span class="nav-label">log</span>
+    </button>
+    <button class="nav-item" id="nav-stats" onclick="showScreen('screen-stats')">
+      <span class="nav-icon">◎</span>
+      <span class="nav-label">patterns</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+let profile = {};
+let entries = [];
+let selectedMood = '😐';
+let completedBreaks = [];
+
+// ALL BREAK SUGGESTIONS
+const breaks = {
+  free: {
+    outdoorsy: [
+      { title:"Walk a different route home", desc:"Take any street you've never walked down before. Doesn't matter where it goes.", tags:['free','outdoor','10 min'] },
+      { title:"Sit outside for 15 minutes — no phone", desc:"Just exist outside. Watch what's happening. No doom scrolling.", tags:['free','outdoor','15 min'] },
+      { title:"Find something in nature you've never noticed before", desc:"A weird plant, an interesting rock, a bird you can't name. Just look.", tags:['free','outdoor','any time'] },
+      { title:"Watch the sunrise or sunset", desc:"Actually watch it. The whole thing. Start to finish.", tags:['free','outdoor','varies'] },
+      { title:"Go somewhere local you've never been", desc:"A park, a street, a trail. Doesn't have to be far.", tags:['free','outdoor','30 min'] },
+    ],
+    homebody: [
+      { title:"Rearrange one small thing in your room", desc:"Move a shelf, flip your desk setup, change where one thing lives. Tiny spatial change, big mental shift.", tags:['free','indoor','10 min'] },
+      { title:"Cook or make something you've never tried before", desc:"Even just a new snack combination. Low stakes, new experience.", tags:['free','indoor','30 min'] },
+      { title:"Read the first chapter of any book", desc:"Pick anything — doesn't have to be something you'd normally choose.", tags:['free','indoor','20 min'] },
+      { title:"Watch a YouTube video in a topic you know nothing about", desc:"Completely random. Woodworking, astronomy, ancient history — pick something foreign.", tags:['free','indoor','20 min'] },
+      { title:"Write down 10 things you actually like about your life", desc:"Not goals, not wishes. Things that exist right now.", tags:['free','indoor','10 min'] },
+    ],
+    gamer: [
+      { title:"Play a game in a genre you never touch", desc:"If you play shooters, try a puzzle game. If you play RPGs, try something arcade. One session.", tags:['free','indoor','1 hr'] },
+      { title:"Play a game with the sound off and music on", desc:"Your playlist, not the game's. Completely changes the vibe.", tags:['free','indoor','any time'] },
+      { title:"Try a game from before you were born", desc:"Emulators are free. Play something from the 90s. It's a trip.", tags:['free','indoor','1 hr'] },
+      { title:"Watch a speedrun of your favorite game", desc:"Seeing someone break a game you love is genuinely wild.", tags:['free','indoor','30 min'] },
+    ],
+    creative: [
+      { title:"Draw something with your non-dominant hand", desc:"It will look terrible. That's the point. No pressure, just weird.", tags:['free','creative','15 min'] },
+      { title:"Write a 6-word story about your day", desc:"Exactly six words. Tell today's story. Harder than it sounds.", tags:['free','creative','5 min'] },
+      { title:"Make a playlist for a specific mood or scenario", desc:"Not for you right now — for a specific fictional moment or feeling.", tags:['free','creative','20 min'] },
+      { title:"Photograph 5 things you find genuinely beautiful today", desc:"No filter requirements. Just things that catch your eye.", tags:['free','creative','any time'] },
+    ],
+    default: [
+      { title:"Do one thing in silence today", desc:"No music, no podcast, no YouTube. Just one task in complete quiet.", tags:['free','any','varies'] },
+      { title:"Text someone you haven't talked to in a while", desc:"One message. No big deal. Just hey.", tags:['free','social','2 min'] },
+      { title:"Learn one completely useless fact", desc:"Look up literally anything weird. Wikipedia rabbit hole, go.", tags:['free','indoor','10 min'] },
+      { title:"Change the order you do your morning routine", desc:"Shower before breakfast. Or after. Brush teeth at a different time. Tiny chaos.", tags:['free','any','morning'] },
+      { title:"Sit in a different spot than you normally do", desc:"Different chair, different room, outside. New perspective on the same space.", tags:['free','any','any time'] },
+    ]
+  },
+  paid5: [
+    { title:"Get a snack you've never tried from a store", desc:"Any store. Pick something that looks weird or interesting. Under $3.", tags:['$1–5','food','20 min'] },
+    { title:"Print a photo you like", desc:"One photo that means something. Put it somewhere you'll see it.", tags:['$1–5','creative','any time'] },
+  ],
+  paid15: [
+    { title:"Go to a local coffee shop you've never been to", desc:"Sit there. Order something. Just exist somewhere different for an hour.", tags:['$5–15','outdoor','1 hr'] },
+    { title:"Buy a used book on something you know nothing about", desc:"Thrift store, library sale. $2–5. Pick something completely foreign.", tags:['$5–15','creative','any time'] },
+  ]
+};
+
+function getBreakSuggestion() {
+  const vibe = profile.vibe || 'default';
+  const budget = profile.budget || '$0 (free only)';
+  let pool = [...(breaks.free[vibe] || breaks.free.default), ...breaks.free.default];
+  if (budget === '$1–5' || budget === '$5–15' || budget === '$15+') pool = [...pool, ...breaks.paid5];
+  if (budget === '$5–15' || budget === '$15+') pool = [...pool, ...breaks.paid15];
+  const done = completedBreaks.map(b => b.title);
+  const available = pool.filter(b => !done.includes(b.title));
+  if (!available.length) return pool[Math.floor(Math.random() * pool.length)];
+  return available[Math.floor(Math.random() * available.length)];
+}
+
+function toggleChip(el, group) {
+  document.querySelectorAll('#' + group + 'Chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  profile[group] = el.textContent;
+}
+
+function selectMood(btn, mood) {
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedMood = mood;
+}
+
+function completeSetup() {
+  profile.name = document.getElementById('setupName').value.trim() || 'you';
+  if (!profile.age) profile.age = '15–16';
+  if (!profile.budget) profile.budget = '$0 (free only)';
+  if (!profile.vibe) profile.vibe = 'default';
+  saveProfile();
+  initHome();
+  showScreen('screen-home');
+}
+
+function initHome() {
+  const name = profile.name || 'you';
+  document.getElementById('homeGreeting').textContent = 'hey, ' + name + '!';
+  const now = new Date();
+  document.getElementById('todayDate').textContent = now.toLocaleDateString('en-US', { weekday:'long', month:'long', day:'numeric' });
+  updateStreak();
+  renderRecentEntries();
+  checkTodayBreak();
+}
+
+function updateStreak() {
+  if (!entries.length) { document.getElementById('todayStreak').textContent = 'start logging to build your streak'; return; }
+  let streak = 0;
+  const today = dateStr(new Date());
+  const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+  let check = today;
+  for (let d of dates) {
+    if (d === check) { streak++; check = prevDay(check); }
+    else if (d < check) break;
+  }
+  const breaks_done = completedBreaks.length;
+  document.getElementById('todayStreak').textContent = streak + ' day streak · ' + breaks_done + ' breaks done';
+}
+
+function checkTodayBreak() {
+  const today = dateStr(new Date());
+  const todayEntries = entries.filter(e => e.date === today);
+  const todayBreak = completedBreaks.find(b => b.date === today);
+  if (todayEntries.length > 0 && !todayBreak) {
+    showBreakSuggestion();
+  }
+}
+
+function showBreakSuggestion() {
+  const b = getBreakSuggestion();
+  if (!b) return;
+  const area = document.getElementById('breakArea');
+  area.innerHTML = `
+    <div class="label">today's break suggestion</div>
+    <div class="break-card" id="currentBreak">
+      <div class="break-category">${profile.vibe || 'general'} · ${profile.budget || 'free'}</div>
+      <div class="break-title">${b.title}</div>
+      <div class="break-desc">${b.desc}</div>
+      <div class="break-meta">
+        ${b.tags.map(t => `<span class="break-tag ${t === 'free' ? 'free' : t === 'outdoor' ? 'outdoor' : t === 'creative' ? 'creative' : ''}">${t}</span>`).join('')}
+      </div>
+      <div class="break-actions">
+        <button class="break-done" onclick="markBreakDone('${escJs(b.title)}','${escJs(b.desc)}')">✓ I did this</button>
+        <button class="break-skip" onclick="skipBreak()">different one →</button>
+      </div>
+    </div>`;
+}
+
+function markBreakDone(title, desc) {
+  completedBreaks.push({ title, desc, date: dateStr(new Date()) });
+  saveData();
+  document.getElementById('breakArea').innerHTML = `
+    <div class="label">break done ✓</div>
+    <div class="break-card" style="border-color:var(--accent3)">
+      <div class="break-category" style="color:var(--accent3)">completed today</div>
+      <div class="break-title" style="color:var(--text2)">${title}</div>
+      <div class="break-desc">nice. that's one less identical day. 🌱</div>
+    </div>`;
+  updateStreak();
+}
+
+function skipBreak() {
+  showBreakSuggestion();
+}
+
+function submitLog() {
+  const text = document.getElementById('logText').value.trim();
+  if (!text) return;
+  const entry = {
+    id: Date.now(),
+    text,
+    mood: selectedMood,
+    date: dateStr(new Date()),
+    time: new Date().toLocaleTimeString('en-US', { hour:'numeric', minute:'2-digit' })
+  };
+  entries.unshift(entry);
+  saveData();
+  document.getElementById('logText').value = '';
+  document.querySelectorAll('.mood-btn').forEach(b => b.classList.remove('selected'));
+  selectedMood = '😐';
+  renderRecentEntries();
+  updateStreak();
+  checkTodayBreak();
+}
+
+function renderRecentEntries() {
+  const el = document.getElementById('recentEntries');
+  if (!entries.length) { el.innerHTML = '<div class="label" style="margin-top:1.5rem">recent</div><div class="empty">no entries yet — log your first day above</div>'; return; }
+  const recent = entries.slice(0, 5);
+  el.innerHTML = '<div class="label" style="margin-top:1.5rem">recent</div>' + recent.map(e => `
+    <div class="entry">
+      <div class="entry-header">
+        <span class="entry-date">${formatDate(e.date)} · ${e.time}</span>
+        <span class="entry-mood">${e.mood}</span>
+      </div>
+      <div class="entry-text">${escHtml(e.text)}</div>
+    </div>`).join('');
+}
+
+function renderHistory() {
+  renderPatternGrid();
+  const el = document.getElementById('allEntries');
+  if (!entries.length) { el.innerHTML = '<div class="empty">no entries yet</div>'; return; }
+  el.innerHTML = entries.map(e => `
+    <div class="entry">
+      <div class="entry-header">
+        <span class="entry-date">${formatDate(e.date)} · ${e.time}</span>
+        <span class="entry-mood">${e.mood}</span>
+      </div>
+      <div class="entry-text">${escHtml(e.text)}</div>
+    </div>`).join('');
+}
+
+function renderPatternGrid() {
+  const el = document.getElementById('patternGrid');
+  const today = new Date();
+  const cells = [];
+  for (let i = 27; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - i);
+    const ds = dateStr(d);
+    const hasEntry = entries.some(e => e.date === ds);
+    const hasBreak = completedBreaks.some(b => b.date === ds);
+    const isToday = ds === dateStr(today);
+    const label = d.toLocaleDateString('en-US', { weekday:'narrow' });
+    cells.push(`<div class="pattern-cell ${hasEntry ? 'has-entry' : ''} ${hasBreak ? 'has-break' : ''} ${isToday ? 'today' : ''}" title="${ds}">
+      <span>${label}</span>
+      ${hasBreak ? '<div class="cell-dot"></div>' : ''}
+    </div>`);
+  }
+  el.innerHTML = cells.join('');
+}
+
+function renderStats() {
+  const totalDays = new Set(entries.map(e => e.date)).size;
+  const totalBreaks = completedBreaks.length;
+  let streak = 0;
+  const today = dateStr(new Date());
+  const dates = [...new Set(entries.map(e => e.date))].sort().reverse();
+  let check = today;
+  for (let d of dates) {
+    if (d === check) { streak++; check = prevDay(check); }
+    else break;
+  }
+  const moods = entries.map(e => e.mood);
+  const moodCounts = {};
+  moods.forEach(m => { moodCounts[m] = (moodCounts[m] || 0) + 1; });
+  const topMood = Object.entries(moodCounts).sort((a,b) => b[1]-a[1])[0];
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-cell"><div class="stat-label">days logged</div><div class="stat-val">${totalDays}</div><div class="stat-sub">total entries</div></div>
+    <div class="stat-cell"><div class="stat-label">streak</div><div class="stat-val">${streak}</div><div class="stat-sub">days in a row</div></div>
+    <div class="stat-cell"><div class="stat-label">breaks done</div><div class="stat-val">${totalBreaks}</div><div class="stat-sub">routines broken</div></div>
+    <div class="stat-cell"><div class="stat-label">top mood</div><div class="stat-val">${topMood ? topMood[0] : '—'}</div><div class="stat-sub">${topMood ? topMood[1] + ' times' : 'no data yet'}</div></div>`;
+
+  if (totalDays >= 3) {
+    const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const dayCounts = {};
+    entries.forEach(e => {
+      const day = dayNames[new Date(e.date + 'T12:00:00').getDay()];
+      dayCounts[day] = (dayCounts[day] || 0) + 1;
+    });
+    const sorted = Object.entries(dayCounts).sort((a,b) => b[1]-a[1]);
+    document.getElementById('patternInsight').innerHTML = `
+      <div style="font-size:13px;color:var(--text2);line-height:1.7">
+        You log most on <strong style="color:var(--accent)">${sorted[0]?.[0] || '—'}</strong> and <strong style="color:var(--accent)">${sorted[1]?.[0] || '—'}</strong>.<br>
+        ${totalBreaks > 0 ? `You've broken your routine <strong style="color:var(--accent)">${totalBreaks}</strong> time${totalBreaks > 1 ? 's' : ''}. That's ${totalBreaks} days that weren't identical.` : `No breaks done yet — try one today.`}
+      </div>`;
+  }
+
+  if (completedBreaks.length) {
+    document.getElementById('breaksCompleted').innerHTML = completedBreaks.slice().reverse().map(b => `
+      <div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-size:13px;color:var(--text);margin-bottom:2px">${escHtml(b.title)}</div>
+        <div style="font-size:11px;color:var(--text3);letter-spacing:0.5px">${formatDate(b.date)}</div>
+      </div>`).join('');
+  }
+}
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = {'screen-home':'nav-home','screen-history':'nav-history','screen-stats':'nav-stats'};
+  if (map[id]) document.getElementById(map[id]).classList.add('active');
+  if (id === 'screen-history') renderHistory();
+  if (id === 'screen-stats') renderStats();
+  window.scrollTo(0,0);
+}
+
+// UTILS
+function dateStr(d) { return d.toISOString().split('T')[0]; }
+function prevDay(ds) {
+  const d = new Date(ds + 'T12:00:00');
+  d.setDate(d.getDate() - 1);
+  return dateStr(d);
+}
+function formatDate(ds) {
+  const d = new Date(ds + 'T12:00:00');
+  return d.toLocaleDateString('en-US', { month:'short', day:'numeric' });
+}
+function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function escJs(s) { return String(s).replace(/'/g,"\\'"); }
+
+function saveProfile() { try { localStorage.setItem('rb_profile', JSON.stringify(profile)); } catch(e){} }
+function saveData() {
+  try {
+    localStorage.setItem('rb_entries', JSON.stringify(entries));
+    localStorage.setItem('rb_breaks', JSON.stringify(completedBreaks));
+  } catch(e){}
+}
+
+function init() {
+  try {
+    const p = localStorage.getItem('rb_profile');
+    if (p) { profile = JSON.parse(p); }
+    const e = localStorage.getItem('rb_entries');
+    if (e) { entries = JSON.parse(e); }
+    const b = localStorage.getItem('rb_breaks');
+    if (b) { completedBreaks = JSON.parse(b); }
+  } catch(e){}
+
+  if (profile.name) {
+    initHome();
+    showScreen('screen-home');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
